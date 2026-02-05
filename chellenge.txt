@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title> SkyLine Daily Challenge</title>
+<style>
+  :root{
+    --bg:#f6fbff;
+    --card:#ffffff;
+    --accent:#4f99ff;
+    --muted:#64748b;
+    --glass: rgba(255,255,255,0.75);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(180deg,var(--bg), #e9f2ff 60%);
+    padding:24px;
+  }
+  .container{
+    width:100%;
+    max-width:520px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(25,50,80,0.08);
+    padding:22px;
+    backdrop-filter: blur(6px);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo{
+    width:56px;height:56px;border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),#6ac6ff);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;
+    box-shadow:0 6px 18px rgba(79,153,255,0.28);
+  }
+  h1{margin:0;font-size:18px}
+  p.lead{margin:6px 0 18px;color:var(--muted);font-size:13px}
+
+  .row{display:flex;gap:12px;align-items:center}
+  .weather-card{
+    flex:1;
+    background:linear-gradient(180deg, rgba(79,153,255,0.06), rgba(79,153,255,0.02));
+    border-radius:10px;padding:14px;display:flex;gap:12px;align-items:center;
+  }
+  .big{
+    font-size:34px;font-weight:600;
+  }
+  .condition{font-size:14px;color:var(--muted)}
+  .challenge{
+    margin-top:14px;padding:14px;border-radius:10px;background:linear-gradient(90deg,#fff,#f7fbff);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .badge{
+    font-size:22px;width:56px;height:56px;border-radius:10px;background:var(--glass);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(14,30,60,0.06);
+  }
+  .challenge h3{margin:0;font-size:16px}
+  .challenge p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .controls{margin-top:14px;display:flex;gap:8px;align-items:center}
+  input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid #e6eefc;font-size:14px}
+  button{
+    padding:10px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;
+    box-shadow:0 6px 16px rgba(79,153,255,0.22);
+  }
+  small.hint{display:block;margin-top:8px;color:var(--muted);font-size:12px}
+
+  footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+  .loader{width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* responsive */
+  @media (max-width:480px){.row{flex-direction:column;align-items:flex-start}.badge{width:48px;height:48px}}
+</style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div class="logo">WD</div>
+      <div>
+        <h1>SkyLine Daily Challenge</h1>
+        <p class="lead">A simple daily challenge based on today's weather. (Auto detects location)</p>
+      </div>
+    </header>
+
+    <div class="row" style="margin-top:16px">
+      <div class="weather-card" id="weatherCard">
+        <div>
+          <div id="temp" class="big">--°C</div>
+          <div id="cond" class="condition">Fetching weather… <span class="loader" id="miniLoader"></span></div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div id="place" style="font-weight:600">—</div>
+          <div style="color:var(--muted);font-size:13px" id="timeLocal">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="challenge" id="challengeBox" style="display:none">
+      <div class="badge" id="emoji">🌤️</div>
+      <div>
+        <h3 id="challengeTitle">Today's challenge</h3>
+        <p id="challengeText">—</p>
+        <small id="challengeTip" class="hint">Tip: complete it and tap ✓ to mark done.</small>
+      </div>
+      <div style="margin-left:auto">
+        <button id="doneBtn" title="Mark done">✓</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="cityInput" type="text" placeholder="Or search city (e.g., Chennai)" />
+      <button id="searchBtn">Search</button>
+	  <a href="thahi.html">
+      <button id="refreshBtn" title="Refresh weather">⟳</button>
+    </div>
+    <small class="hint">No API key required. Uses Open-Meteo (free) for weather and geocoding.</small>
+
+    <footer id="status" aria-live="polite">Waiting for location permission...</footer>
+  </div>
+
+<script>
+/*
+  Weather Daily Challenge
+  - Uses Open-Meteo APIs (no API key):
+    - Geocoding: https://geocoding-api.open-meteo.com/v1/search?name=city
+    - Current weather: https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&current_weather=true&timezone=auto
+  - Maps weathercode to condition, emoji, and challenge.
+*/
+
+const statusEl = document.getElementById('status');
+const tempEl = document.getElementById('temp');
+const condEl = document.getElementById('cond');
+const placeEl = document.getElementById('place');
+const timeLocalEl = document.getElementById('timeLocal');
+const challengeBox = document.getElementById('challengeBox');
+const emojiEl = document.getElementById('emoji');
+const challengeTitleEl = document.getElementById('challengeTitle');
+const challengeTextEl = document.getElementById('challengeText');
+const challengeTipEl = document.getElementById('challengeTip');
+const miniLoader = document.getElementById('miniLoader');
+
+const cityInput = document.getElementById('cityInput');
+const searchBtn = document.getElementById('searchBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+const doneBtn = document.getElementById('doneBtn');
+
+let lastWeather = null;
+
+// Map Open-Meteo weathercode to a friendly condition
+// Reference: https://open-meteo.com/en/docs
+const weatherCodeMap = [
+  {codes:[0], name:'Clear', emoji:'☀️'},
+  {codes:[1,2,3], name:'Mainly clear / partly cloudy', emoji:'🌤️'},
+  {codes:[45,48], name:'Fog', emoji:'🌫️'},
+  {codes:[51,53,55,56,57], name:'Drizzle / Freezing Drizzle', emoji:'🌦️'},
+  {codes:[61,63,65,66,67], name:'Rain', emoji:'🌧️'},
+  {codes:[71,73,75,77], name:'Snow', emoji:'❄️'},
+  {codes:[80,81,82], name:'Rain showers', emoji:'🌧️'},
+  {codes:[95,96,99], name:'Thunderstorm', emoji:'⛈️'},
+  // fallback
+];
+
+function mapWeatherCode(code){
+  for(const entry of weatherCodeMap){
+    if(entry.codes.includes(code)) return entry;
+  }
+  return {name:'Unknown', emoji:'🌈'};
+}
+
+// Challenge rules: simple, unique, actionable
+function pickChallenge(conditionName, temperature){
+  // default challenges
+  const lowTemp = temperature !== null && temperature <= 15;
+  const highTemp = temperature !== null && temperature >= 30;
+
+  const pool = [];
+
+  // Clear / sunny
+  if(/clear|sun/i.test(conditionName)){
+    pool.push(
+      {title:'Sunshine Walk', text:'Take a 15-minute walk outside and notice 3 things you like about the sky.'},
+      {title:'Sun Gratitude', text:'Step outside for 5 minutes and take 3 deep breaths — enjoy the sunlight.'}
+    );
+  }
+
+  // Rainy / drizzle
+  if(/rain|drizzle|showers/i.test(conditionName)){
+    pool.push(
+      {title:'Rain Reading', text:'Spend 20 minutes reading or listening to music while sipping a warm drink.'},
+      {title:'Cozy Care', text:'Do one cozy task: warm socks, a hot drink, or a short stretch.'}
+    );
+  }
+
+  // Cloudy / overcast
+  if(/cloud|fog|mist|mainly/i.test(conditionName)){
+    pool.push(
+      {title:'Photo Challenge', text:'Take a moody photo of the sky and save it to your gallery.'},
+      {title:'Mindful Pause', text:'Close your eyes for 2 minutes and do a quick body-scan.'}
+    );
+  }
+
+  // Thunderstorm
+  if(/thunder|storm/i.test(conditionName)){
+    pool.push(
+      {title:'Safety Check', text:'Quickly check that windows are closed and devices are safe from power surges.'},
+      {title:'Indoor Stretch', text:'Do a 7-minute indoor stretch routine to stay active.'}
+    );
+  }
+
+  // Snow/cold
+  if(/snow|freez/i.test(conditionName) || lowTemp){
+    pool.push(
+      {title:'Warm Note', text:'Make a hot beverage and write a 1-line note of appreciation to yourself.'},
+      {title:'Warm-Up Move', text:'Do 10 simple bodywarmers: jumping jacks or marching on the spot.'}
+    );
+  }
+
+  // Hot day
+  if(highTemp){
+    pool.push(
+      {title:'Hydration Break', text:'Drink a full glass of water and set a 1-hour reminder to hydrate again.'},
+      {title:'Shade Walk', text:'Take a 10-minute walk in the shade or indoors to stay cool.'}
+    );
+  }
+
+  // Default gentle ideas
+  pool.push(
+    {title:'Tiny Task', text:'Complete one small task you’ve been postponing (5–15 minutes).'},
+    {title:'Smile Challenge', text:'Send a short message to someone and make their day.'}
+  );
+
+  // pick one randomly
+  const choice = pool[Math.floor(Math.random()*pool.length)];
+  return choice;
+}
+
+async function fetchWeatherByCoords(lat, lon){
+  try{
+    miniLoader.style.display = 'inline-block';
+    statusEl.textContent = 'Fetching current weather…';
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current_weather=true&timezone=auto`;
+    const resp = await fetch(url);
+    if(!resp.ok) throw new Error('Weather fetch failed');
+    const data = await resp.json();
+    miniLoader.style.display = 'none';
+    if(!data || !data.current_weather) throw new Error('No weather data');
+
+    const cw = data.current_weather;
+    const temperature = Math.round(cw.temperature); // in °C
+    const code = cw.weathercode;
+    const condition = mapWeatherCode(code);
+
+    // display
+    tempEl.textContent = `${temperature}°C`;
+    condEl.textContent = `${condition.name} • wind ${Math.round(cw.windspeed)} km/h`;
+    emojiEl.textContent = condition.emoji;
+    placeEl.textContent = `${data.timezone || ''}`;
+    const now = new Date();
+    timeLocalEl.textContent = now.toLocaleString();
+
+    // pick challenge
+    const challenge = pickChallenge(condition.name, temperature);
+    challengeTitleEl.textContent = challenge.title;
+    challengeTextEl.textContent = challenge.text;
+    challengeBox.style.display = 'flex';
+    statusEl.textContent = 'Today’s challenge ready — go for it!';
+    lastWeather = {temperature, code, condition};
+  }catch(err){
+    miniLoader.style.display = 'none';
+    statusEl.textContent = 'Unable to fetch weather. Try search or refresh.';
+    condEl.textContent = '—';
+    tempEl.textContent = '--°C';
+    console.error(err);
+  }
+}
+
+async function geocodeAndFetch(city){
+  if(!city || !city.trim()) return;
+  statusEl.textContent = `Searching for "${city}"…`;
+  try{
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`;
+    const r = await fetch(geoUrl);
+    if(!r.ok) throw new Error('Geocoding failed');
+    const j = await r.json();
+    if(!j.results || j.results.length === 0){
+      statusEl.textContent = 'City not found. Try another name.';
+      return;
+    }
+    const top = j.results[0];
+    placeEl.textContent = `${top.name}${top.admin1 ? ', ' + top.admin1 : ''}${top.country ? ', ' + top.country : ''}`;
+    await fetchWeatherByCoords(top.latitude, top.longitude);
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Geocoding failed.';
+  }
+}
+
+function tryGeolocation(){
+  if(!navigator.geolocation) {
+    statusEl.textContent = 'Geolocation not supported — search a city.';
+    return;
+  }
+  statusEl.textContent = 'Requesting location…';
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    statusEl.textContent = 'Location found — fetching weather…';
+    // Optionally reverse-geocode the display name via Open-Meteo geocoding reverse endpoint
+    try{
+      const rev = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`);
+      if(rev.ok){
+        const j = await rev.json();
+        if(j && j.results && j.results.length) {
+          const r = j.results[0];
+          placeEl.textContent = `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}${r.country ? ', ' + r.country : ''}`;
+        } else {
+          placeEl.textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+        }
+      } else {
+        placeEl.textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+      }
+    }catch(e){
+      placeEl.textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+    }
+    await fetchWeatherByCoords(lat, lon);
+  }, (err)=>{
+    console.warn('Geolocation error', err);
+    statusEl.textContent = 'Location blocked or unavailable — search a city.';
+  }, {timeout:8000, maximumAge:300000});
+}
+
+// UI events
+searchBtn.addEventListener('click', ()=> geocodeAndFetch(cityInput.value));
+cityInput.addEventListener('keyup', (e)=> { if(e.key === 'Enter') geocodeAndFetch(cityInput.value); });
+refreshBtn.addEventListener('click', ()=> {
+  statusEl.textContent = 'Refreshing…';
+  if(lastWeather) {
+    // try to refresh using the last known timezone/place by attempt geolocation first
+    tryGeolocation();
+  } else {
+    tryGeolocation();
+  }
+});
+doneBtn.addEventListener('click', ()=> {
+  challengeTipEl.textContent = 'Great! Marked done ✅ — come back tomorrow for a new challenge.';
+  doneBtn.disabled = true;
+  doneBtn.style.opacity = 0.6;
+  statusEl.textContent = 'Challenge completed — nice one!';
+});
+
+// start
+tryGeolocation();
+</script>
+</body>
+</html>

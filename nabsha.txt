@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather SkyLine – Dynamic Half Hour</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Poppins, sans-serif;
+  background:white;
+}
+.container{
+  width:360px;
+  height:720px;
+  background:skyblue;
+  border-radius:40px;
+  padding:25px;
+  box-sizing:border-box;
+  color:white;
+  text-align:center;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:25px;
+  margin-bottom:12px;
+  font-size:15px;
+}
+button{
+  background:#e5c02d;
+  font-weight:600;
+  cursor:pointer;
+}
+button:hover{background:#f0d33f;}
+
+.weather-box{
+  margin-top:20px;
+  padding:15px;
+  background:rgba(255,255,255,0.15);
+  border-radius:20px;
+}
+.time{
+  font-size:18px;
+  font-weight:600;
+}
+.temp{
+  font-size:36px;
+  font-weight:bold;
+}
+.cond{
+  font-size:18px;
+  opacity:0.9;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>🌦️ Skyline Weather App</h2>
+
+<input type="text" id="city" placeholder="Enter City Name">
+<input type="date" id="date">
+<input type="time" id="time">
+
+<button onclick="showWeather()">Search Weather</button>
+ 
+  <a href="nst.html">
+  <button onclick="next">Next</button>
+<div id="result" style="display:none;">
+
+  <div class="weather-box">
+    <div class="time" id="time1"></div>
+    <div class="temp" id="temp1"></div>
+    <div class="cond" id="cond1"></div>
+  </div>
+
+  <div class="weather-box">
+    <div class="time" id="time2"></div>
+    <div class="temp" id="temp2"></div>
+    <div class="cond" id="cond2"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function showWeather(){
+  const city = document.getElementById("city").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+
+  if(city==="" || date==="" || time===""){
+    alert("City, Date, Time ellam enter pannunga");
+    return;
+  }
+
+  // Selected time
+  const t1 = new Date(date + "T" + time);
+  const t2 = new Date(t1.getTime() + 30 * 60000); // Next half-hour
+
+  // Temperature logic: simple simulation
+  function getTemp(hour, seed){
+    // seed randomization for city + hour for consistent temp
+    const hash = city.charCodeAt(0) + seed;
+    return Math.round(26 + Math.sin(hour/24 * Math.PI*2 + hash) * 5);
+  }
+
+  // Weather condition logic: randomize next half-hour
+  function getCondition(hour, seed){
+    const options = ["Sunny ☀️","Rainy 🌧️","Cloudy ⛅","Windy 🌬️"];
+    const index = (hour + seed) % options.length;
+    return options[index];
+  }
+
+  const seed = t1.getDate(); // unique per day
+  // Selected time weather
+  document.getElementById("time1").innerText = 
+      city + " | " + t1.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById("temp1").innerText = getTemp(t1.getHours(), seed) + "°C";
+  document.getElementById("cond1").innerText = getCondition(t1.getHours(), seed);
+
+  // Next half-hour weather
+  document.getElementById("time2").innerText = 
+      city + " | " + t2.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById("temp2").innerText = getTemp(t2.getHours(), seed+1) + "°C";
+  document.getElementById("cond2").innerText = getCondition(t2.getHours(), seed+1);
+
+  document.getElementById("result").style.display = "block";
+ 
+  }
+</script>
+</body>
+</html>

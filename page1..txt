@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skyline Weather</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .logo-container {
+            text-align: center;
+            animation: fadeIn 2s ease;
+        }
+
+        .icon {
+            font-size: 90px;
+            margin-bottom: 10px;
+        }
+
+        .app-name {
+            font-size: 52px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffffff, #e0f7fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 16px;
+            margin-top: 10px;
+            letter-spacing: 2px;
+            opacity: 0.85;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<a href="sumaiya.html" style="text-decoration: none;">
+    <div class="logo-container">
+        <div class="icon">🌤️</div>
+        <div class="app-name">Skyline</div>
+        <div class="tagline">Weather Made Beautiful</div>
+    </div>
+</a>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyline - Login</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(#6EB6FF, #BFDFFF);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .box {
+            width: 350px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        h2 {
+            text-align: center;
+            color: #0057A3;
+        }
+        label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #007BFF;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .link {
+            text-align: center;
+            margin-top: 10px;
+        }
+        a {
+            color: #0057A3;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>SKYLINE WEATHER APP</h2>
+
+        <div id="error" class="error">Invalid Username or Password!</div>
+
+        <label>Username</label>
+        <input type="text" id="user" placeholder="Enter your username">
+
+        <label>Password</label>
+        <input type="password" id="pass" placeholder="Enter your password">
+          <a href="nabi.html">
+        <button class="btn" onclick="login()">Login</button>
+
+        <div class="link">
+            <a href="#">Forgot Password?</a>
+        </div>
+
+        <div class="link">
+            <a href="#">Create new account (Signup)</a>
+        </div>
+    </div>
+
+<script>
+function login() {
+    let u = document.getElementById("user").value;
+    let p = document.getElementById("pass").value;
+    let err = document.getElementById("error");
+
+    if (u === "sumaiya" && p === "nst") {
+        window.location.href = "nextpage.html";  // success → go to next page
+    } else {
+        err.style.display = "block";
+    }
+}
+</script>
+
+</body>
+</html>
